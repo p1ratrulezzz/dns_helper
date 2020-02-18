@@ -1,0 +1,18 @@
+;
+; BIND data file for local loopback interface
+;
+$TTL	60
+; myLocalZoneMame - is the zone name. Can be anything. Do not end with dot!. 
+; myLocalZoneMame.localhost. - email in name format. Note the dot at the end
+@	IN	SOA	myLocalZoneMame myLocalZoneMame.localhost. (
+		              1		; Serial
+			     60		; Refresh
+			   3600		; Retry
+			     60		; Expire
+			     60 )	; Negative Cache TTL
+;
+@	IN	NS	localhost.
+; Example com address set for now
+@	IN	A	93.184.216.34
+;@	IN	AAAA	::1
+

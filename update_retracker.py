@@ -17,11 +17,26 @@ resolverIP = '192.168.1.1'
 
 def eprint(error):
     print(error, file=sys.stderr)
+    return None
 
 zone = dns.zone.from_file(zoneFile,origin='retracker.local')
 
-recordA = str(zone.get_rrset('@', 'a')).split(' ')
-oldIP = recordA[-1]
+recordA = str(zone.get_rdataset('@', 'a')).split(' ')
+recordSoa = str(zone.get_rdataset('@', 'soa')).split(' ')
+
+oldIP = recordA[-1] 
+
+# print (recordSoa)
+
+# sys.exit()
+
+def updateSoa():
+  serial = int(recordSoa[5])
+  recordSoa[5] = str(serial + 1);
+  textRdata = ' '.join(recordSoa[3:])
+  rdataset = dns.rdataset.from_text('in', 'soa', 60, textRdata)
+  zone.replace_rdataset('@', rdataset)
+  print('SOA Updated')
 
 def getNewIp():
   resolver = dns.resolver.Resolver()
@@ -34,13 +49,15 @@ def getNewIp():
 
 def rndcReload():
   os.system('rndc reload')
+  os.system('rndc flush')
   print('rndc reload')
 
 newIP = getNewIp()
 if newIP and newIP != oldIP:
-  rdataset = dns.rdataset.from_text('in', 'a', 3600, newIP)
+  updateSoa()
+  rdataset = dns.rdataset.from_text('in', 'a', 60, newIP)
   zone.replace_rdataset('@', rdataset)
-  zone.to_file(zoneFile)
+  zone.to_file(zoneFile, sorted=True, relativize=False)
   rndcReload()
   eprint('Zone updated with a new IP: ' + newIP + '; old IP: ' + oldIP)
 else:
